@@ -495,3 +495,78 @@ else:
     print("_"*100)
     print("Document disponible à: "+chemin+document)
     wb.save(filename=chemin+document)
+
+    
+#ci dessous mon code test brut WIP (a réintégrer proprement dans la classe avec les variables faciles)
+
+
+commandes=[1000,2000,500]
+stocks=[2000,3000,4000]
+lcoupe=5
+
+def test(stocks,commandes):     #crée une liste de liste de listes de la bonne taille
+    L=[]
+    for i in range(len(stocks)**len(commandes)):
+        ltemp=[]
+        for j in range(len(stocks)):
+            ltemp.append([])
+        L.append(ltemp)
+    return L
+
+def listage(stocks,commandes):      #cette fonction utilise la liste de liste de liste créée par test(stocks,commandes) pour l'éditer
+    results=test(stocks,commandes)  #en applicant les commandes aux différents stocks
+    c=len(commandes)+1
+    while len(commandes)>=2:
+        case=0
+        index=0
+        for i in range(len(results)):
+            index2=int(i%(len(results)/(len(stocks)**(c-len(commandes))))) #formule de maths tavu (grosso modo t'as nstocks**ncommandes possibilités)
+            if index and index2<=index:                                     #L'idee etant de bricoler un modulo evolutif pour savoir dans quelle case mettre
+                case+=1                                                     #la prochaine commande
+            index=index2
+            results[i][case%len(stocks)].append(commandes[0])
+        commandes=commandes[1:]
+    for i in range(len(results)):
+        results[i][i%len(stocks)].append(commandes[0])
+    return results
+
+def application(possibilite): #ou possibilité est la liste de listes de commandes appliquées sur tel ou tel stock
+    stocktemp=stocks[:]
+    for i in range(len(possibilite)):
+        for j in possibilite[i]:
+            stocktemp[i]=stocktemp[i]-j-lcoupe
+    return [stocktemp]+[possibilite]
+
+def selection(results):
+    L=[]
+    for i in results: #on calcule toutes les longueurs de poutre
+        L.append(application(i))
+    L2=[]
+    
+    for i in range(len(L)-1): #on se débarasse des possibilites donnant des valeurs negatives
+        booleen=False
+        for j in L[i][0]:
+            if j<0:
+                booleen=True
+        if not booleen:
+            L2.append(L[i])
+            
+    if len(L2)==0:
+        return 'impossible'
+    elif len(L2)==1:
+        return L2
+    
+    Lchutes=[]
+    for i in range(len(L2)-1): #on essaie de se débarasser des solutions créant des chutes
+        chutes=False
+        for j in L2[i][0]:
+            if j<1000:
+                chutes=True
+        if chutes:
+            L2=L2[:(i-1)]+L2[i+1:]
+            Lchutes.append(L2[i])
+            
+    if len(L2)==0:  #si on crée forcément des chutes, on repart de cette liste chutes
+        L2=Lchutes[:]
+    
+    
