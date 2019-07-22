@@ -498,11 +498,10 @@ else:
 
     
 #ci dessous mon code test brut WIP (a réintégrer proprement dans la classe avec les variables faciles)
-
-
-commandes=[1000,2000,500]
-stocks=[2000,3000,4000]
+commandes=[1000,2000,500,4000,500,600,800,900]
+stocks=[1200,2200,1500,7000,1500,3500,4000,5000,6000,7844,3164]
 lcoupe=5
+criterechute=1000
 
 def test(stocks,commandes):     #crée une liste de liste de listes de la bonne taille
     L=[]
@@ -555,18 +554,81 @@ def selection(results):
         return 'impossible'
     elif len(L2)==1:
         return L2
+        
+    L3=[]                   #ici on cherche à voir le nombre de poutre entammées par chaque solution, et on append à la fin de chaque élément de L3
+    for i in L2:
+        entammees=0
+        for j in range(len(i[0])):
+            if i[0][j]<stocks[j]:
+                entammees+=1
+        L3.append([entammees]+i)
     
-    Lchutes=[]
-    for i in range(len(L2)-1): #on essaie de se débarasser des solutions créant des chutes
-        chutes=False
-        for j in L2[i][0]:
-            if j<1000:
-                chutes=True
-        if chutes:
-            L2=L2[:(i-1)]+L2[i+1:]
-            Lchutes.append(L2[i])
+    mini=len(stocks)
+    for i in L3:
+        if i[0]<mini:
+            mini=i[0]
+    L4=[]
+    for i in L3:        #L4 est une L3 débarassée des solutions qui bouffaient trop de poutres
+        if i[0]==mini:
+            L4.append(i[1:])
             
-    if len(L2)==0:  #si on crée forcément des chutes, on repart de cette liste chutes
-        L2=Lchutes[:]
+    for i in range(len(L4)):        #ici on ajoute au début de chaque element de L4 un nombre de chutes (pour pouvoir ensuite minorer le nombre de chutes)
+        chutes=0
+        for j in L4[i][0]:
+            if j<criterechute:
+                chutes+=1
+        L4[i]=[chutes]+L4[i]
+
+    mini=L4[0][0]
+    for i in L4:
+        if i[0]<mini:
+            mini=i[0]
+    L5=[]                   # on garde le solutions avec le moins de chutes possibles
+    for i in L4:
+        if i[0]==mini:
+            L5.append(i[1:])
     
+    for i in range(len(L5)):            #et la fin sert à choisir la solution proposant le moins de longueur de chutes cumulées dans celles proposées par les tris précédents
+        sommechutes=0
+        for j in range(len(L5[i][0])):
+            sommechutes+=stocks[j]-L5[i][0][j]
+        L5[i]=[sommechutes]+L5[i]
+    mini=L5[0][0]
     
+    for i in L5:
+        if i[0]<=mini:
+            mini=i[0]
+    L6=[]
+    for i in L5:
+        if i[0]==mini:
+            L6.append(i[1:])
+    return L6
+
+
+#renvoi=selection(listage(stocks,commandes))
+    
+#essai d'optimisation
+    
+commandes.sort(reverse=False)
+stocks.sort(reverse=False)
+print(commandes,stocks)
+
+
+def coupeliste(liste):
+    temp=[]
+    listeopti=[]
+    for i in range(len(liste)):
+       temp.append(liste[i])
+       if len(temp)==5:
+           listeopti.append(temp)
+           temp=[]
+       elif i==len(stocks)-1:
+           listeopti.append(temp)
+    return listeopti
+
+
+#on veut essayer de le faire traiter commandes et stocks 5 par 5 (pas forcément facile), si ça marche pas on essaie d'étendre
+def resolutionopti(stocks,commandes):
+    stocksopti,commandesopti=coupeliste(stocks),coupeliste(commandes)
+    for i in range(len(commandesopti)):
+        if stocksopti[i]:
